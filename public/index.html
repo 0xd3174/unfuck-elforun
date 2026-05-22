@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="ru" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UF Elforun</title>
+    <meta
+      name="description"
+      content="UF Elforun"
+    />
+    <link rel="icon" type="image/png" href="/logo.png" />
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS v4 Browser Compiler -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      /* Custom scrollbars */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #09090b;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #27272a;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #3f3f46;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-zinc-950 text-zinc-50 min-h-screen flex flex-col justify-between selection:bg-zinc-800 selection:text-zinc-100"
+  >
+    <!-- React App Root Container -->
+    <div
+      id="root"
+      class="w-full flex-grow flex flex-col justify-center items-center py-12 px-4 z-10"
+    >
+      <!-- Loader during react ESM initialization -->
+      <div class="flex flex-col items-center gap-4">
+        <svg
+          class="animate-spin h-8 w-8 text-zinc-400"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <p class="text-zinc-400 text-sm">Загрузка React-приложения...</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer
+      class="w-full text-center py-6 text-xs text-zinc-600 border-t border-zinc-900/50 bg-zinc-950/80 backdrop-blur-sm z-10"
+    >
+      Разработано с использованием Go, React 18, Tailwind & LibreOffice
+    </footer>
+
+    <!-- React + ESM + HTM Script -->
+    <script type="module">
+      import React, {
+        useState,
+        useEffect,
+        useRef,
+      } from "https://esm.sh/react@18.3.1";
+      import ReactDOM from "https://esm.sh/react-dom@18.3.1/client";
+      import htm from "https://esm.sh/htm@3.1.1?module";
+
+      const html = htm.bind(React.createElement);
+
+      // --- Custom Icons (Inline SVGs) ---
+
+      function UploadIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+            />
+          </svg>
+        `;
+      }
+
+      function FileIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+            />
+          </svg>
+        `;
+      }
+
+      function ImageIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+            />
+          </svg>
+        `;
+      }
+
+      function DownloadIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+            />
+          </svg>
+        `;
+      }
+
+      function CheckIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.5 12.75l6 6 9-13.5"
+            />
+          </svg>
+        `;
+      }
+
+      function AlertIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+            />
+          </svg>
+        `;
+      }
+
+      function RefreshIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+            />
+          </svg>
+        `;
+      }
+
+      function TrashIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+            />
+          </svg>
+        `;
+      }
+
+      function EyeIcon({ className }) {
+        return html`
+          <svg
+            className=${className}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        `;
+      }
+
+      // --- Helper: Format File Sizes ---
+      function formatBytes(bytes) {
+        if (bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+      }
+
+      // --- Main App Component ---
+
+      function App() {
+        const [jobs, setJobs] = useState([]);
+        const [dragActive, setDragActive] = useState(false);
+        const fileInputRef = useRef(null);
+
+        const processingSteps = [
+          "Загрузка RTF-отчета",
+          "Конвертация в PDF (LibreOffice)",
+          "Декодирование WMF-графика",
+          "Кадрирование в Pillow",
+          "Готово!",
+        ];
+
+        // Handle Drag events
+        const handleDrag = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+          } else if (e.type === "dragleave") {
+            setDragActive(false);
+          }
+        };
+
+        const handleDrop = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setDragActive(false);
+
+          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            processUploadedFiles(Array.from(e.dataTransfer.files));
+          }
+        };
+
+        const handleFileChange = (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            processUploadedFiles(Array.from(e.target.files));
+          }
+        };
+
+        const triggerFileSelect = () => {
+          fileInputRef.current.click();
+        };
+
+        const processUploadedFiles = (files) => {
+          const newJobs = files.map((file) => {
+            const jobId = `${file.name}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+
+            const isRtf = file.name.toLowerCase().endsWith(".rtf");
+
+            return {
+              id: jobId,
+              name: file.name,
+              size: file.size,
+              status: isRtf ? "uploading" : "error",
+              error: isRtf
+                ? ""
+                : "Недопустимый формат файла. Допускаются только .rtf файлы.",
+              result: null,
+              activeStep: 0,
+              showPreview: false,
+              fileObject: isRtf ? file : null,
+            };
+          });
+
+          setJobs((prevJobs) => [...newJobs, ...prevJobs]);
+
+          // Trigger processing for valid uploads
+          newJobs.forEach((job) => {
+            if (job.status === "uploading") {
+              uploadJob(job.id, job.fileObject);
+            }
+          });
+        };
+
+        const uploadJob = async (jobId, file) => {
+          // Stepper simulation timer
+          let stepTimer;
+          const updateStep = () => {
+            setJobs((prev) =>
+              prev.map((j) => {
+                if (j.id === jobId && j.status === "processing") {
+                  const nextStep =
+                    j.activeStep < 3 ? j.activeStep + 1 : j.activeStep;
+                  return { ...j, activeStep: nextStep };
+                }
+                return j;
+              }),
+            );
+          };
+
+          try {
+            // Update state to uploading
+            setJobs((prev) =>
+              prev.map((j) =>
+                j.id === jobId
+                  ? { ...j, status: "uploading", activeStep: 0 }
+                  : j,
+              ),
+            );
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            // Switch to processing stage
+            setJobs((prev) =>
+              prev.map((j) =>
+                j.id === jobId
+                  ? { ...j, status: "processing", activeStep: 0 }
+                  : j,
+              ),
+            );
+            stepTimer = setInterval(updateStep, 1300);
+
+            const response = await fetch("/upload", {
+              method: "POST",
+              body: formData,
+            });
+
+            clearInterval(stepTimer);
+
+            if (!response.ok) {
+              let errorMsg = "Ошибка конвертации на сервере";
+              try {
+                const errData = await response.json();
+                errorMsg = errData.error || errorMsg;
+              } catch (_) {}
+              throw new Error(errorMsg);
+            }
+
+            const resultData = await response.json();
+
+            setJobs((prev) =>
+              prev.map((j) => {
+                if (j.id === jobId) {
+                  return {
+                    ...j,
+                    status: "success",
+                    activeStep: 4,
+                    result: resultData,
+                  };
+                }
+                return j;
+              }),
+            );
+          } catch (err) {
+            if (stepTimer) clearInterval(stepTimer);
+            setJobs((prev) =>
+              prev.map((j) => {
+                if (j.id === jobId) {
+                  return {
+                    ...j,
+                    status: "error",
+                    error: err.message || "Ошибка обработки на сервере.",
+                  };
+                }
+                return j;
+              }),
+            );
+          }
+        };
+
+        const retryJob = (jobId) => {
+          const job = jobs.find((j) => j.id === jobId);
+          if (job && job.fileObject) {
+            uploadJob(jobId, job.fileObject);
+          }
+        };
+
+        const deleteJob = (jobId) => {
+          setJobs((prev) => prev.filter((j) => j.id !== jobId));
+        };
+
+        const togglePreview = (jobId) => {
+          setJobs((prev) =>
+            prev.map((j) =>
+              j.id === jobId ? { ...j, showPreview: !j.showPreview } : j,
+            ),
+          );
+        };
+
+        const clearAllJobs = () => {
+          setJobs([]);
+        };
+
+        const hasJobs = jobs.length > 0;
+
+        return html`
+          <div className="max-w-3xl w-full flex flex-col gap-6 md:gap-8">
+            <!-- Header -->
+            <div className="flex flex-row items-center justify-center gap-3 md:gap-4">
+              <img
+                src="/logo.png"
+                alt="UF Elforun Logo"
+                className="w-10 h-10 md:w-12 md:h-12 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.15)]"
+              />
+              <h1
+                className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent"
+              >
+                UF Elforun
+              </h1>
+            </div>
+
+            <!-- Dropzone Area -->
+            <div
+              onDragEnter=${handleDrag}
+              onDragOver=${handleDrag}
+              onDragLeave=${handleDrag}
+              onDrop=${handleDrop}
+              onClick=${triggerFileSelect}
+              className=${`border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-3 backdrop-blur-md group
+                            ${
+                              hasJobs
+                                ? "py-6 px-8 border-zinc-800 bg-zinc-900/10 hover:border-zinc-700 hover:bg-zinc-900/20"
+                                : "py-12 px-10 md:py-16 md:px-14 border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 hover:bg-zinc-900/40 scale-[0.99] hover:scale-[1.0]"
+                            }
+                            ${dragActive ? "border-zinc-400 bg-zinc-900/60" : ""}`}
+            >
+              <input
+                ref=${fileInputRef}
+                type="file"
+                onChange=${handleFileChange}
+                accept=".rtf"
+                multiple
+                className="hidden"
+              />
+
+              <div
+                className=${`bg-zinc-900 border border-zinc-800 rounded-xl group-hover:scale-110 transition duration-300 group-hover:border-zinc-700
+                            ${hasJobs ? "p-2" : "p-4"}`}
+              >
+                <${UploadIcon}
+                  className=${`text-zinc-400 group-hover:text-zinc-200 transition ${hasJobs ? "h-6 w-6" : "h-8 w-8"}`}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <h3
+                  className=${`font-semibold text-zinc-200 group-hover:text-zinc-100 ${hasJobs ? "text-sm" : "text-base"}`}
+                >
+                  ${hasJobs
+                    ? "Перетащите сюда ещё файлы"
+                    : "Перетащите сюда RTF-отчеты"}
+                </h3>
+                ${!hasJobs &&
+                html`
+                  <p className="text-zinc-500 text-sm max-w-xs mx-auto">
+                    Или кликните для выбора нескольких файлов на устройстве
+                  </p>
+                `}
+              </div>
+            </div>
+
+            <!-- Job Queue Section -->
+            ${hasJobs &&
+            html`
+              <div
+                className="flex flex-col gap-4 animate-in fade-in duration-300"
+              >
+                <!-- Header Queue Actions -->
+                <div className="flex justify-between items-center px-1">
+                  <span
+                    className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                  >
+                    Очередь обработки (${jobs.length})
+                  </span>
+                  <button
+                    onClick=${clearAllJobs}
+                    className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition flex items-center gap-1.5 px-2 py-1 rounded hover:bg-zinc-900/50"
+                  >
+                    <${TrashIcon} className="h-3.5 w-3.5" />
+                    Очистить список
+                  </button>
+                </div>
+
+                <!-- List of Jobs -->
+                <div className="flex flex-col gap-4">
+                  ${jobs.map(
+                    (job) => html`
+                      <div
+                        key=${job.id}
+                        className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 shadow-lg backdrop-blur-md relative overflow-hidden flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-300"
+                      >
+                        <!-- Top Info Bar -->
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="p-2.5 bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-400"
+                            >
+                              <${FileIcon} className="h-5 w-5" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span
+                                className="font-semibold text-sm text-zinc-200 truncate max-w-xs md:max-w-md"
+                                title=${job.name}
+                              >
+                                ${job.name}
+                              </span>
+                              <span className="text-[11px] text-zinc-500">
+                                ${formatBytes(job.size)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <!-- Status Badge -->
+                            ${job.status === "uploading" &&
+                            html`
+                              <span
+                                className="bg-zinc-800 text-zinc-400 border border-zinc-700 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                              >
+                                Загрузка...
+                              </span>
+                            `}
+                            ${job.status === "processing" &&
+                            html`
+                              <span
+                                className="bg-blue-950/40 text-blue-400 border border-blue-900/40 px-2.5 py-0.5 rounded-full text-[11px] font-semibold animate-pulse"
+                              >
+                                Обработка...
+                              </span>
+                            `}
+                            ${job.status === "success" &&
+                            html`
+                              <span
+                                className="bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                              >
+                                Готово
+                              </span>
+                            `}
+                            ${job.status === "error" &&
+                            html`
+                              <span
+                                className="bg-red-950/40 text-red-400 border border-red-900/50 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                              >
+                                Ошибка
+                              </span>
+                            `}
+
+                            <!-- Delete button -->
+                            <button
+                              onClick=${() => deleteJob(job.id)}
+                              className="text-zinc-500 hover:text-zinc-300 p-1 hover:bg-zinc-950 rounded transition"
+                            >
+                              <span className="text-base font-bold">×</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Processing Progress Bar / Step status -->
+                        ${job.status === "processing" &&
+                        html`
+                          <div
+                            className="flex flex-col gap-2 mt-1 animate-in fade-in"
+                          >
+                            <div
+                              className="flex justify-between items-center text-xs"
+                            >
+                              <span className="text-zinc-400 font-medium"
+                                >${processingSteps[job.activeStep]}</span
+                              >
+                              <span className="text-zinc-500"
+                                >${job.activeStep + 1} / 5</span
+                              >
+                            </div>
+                            <div
+                              className="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-zinc-900"
+                            >
+                              <div
+                                className="bg-zinc-400 h-full rounded-full transition-all duration-500"
+                                style=${{
+                                  width: `${((job.activeStep + 1) / 5) * 100}%`,
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        `}
+
+                        <!-- Error display -->
+                        ${job.status === "error" &&
+                        html`
+                          <div
+                            className="bg-red-950/20 border border-red-900/40 text-red-200 p-3 rounded-lg flex items-start gap-2.5 text-xs animate-in fade-in"
+                          >
+                            <${AlertIcon}
+                              className="h-4 w-4 text-red-500 shrink-0 mt-0.5"
+                            />
+                            <div className="flex flex-col gap-2 w-full">
+                              <span>${job.error}</span>
+                              ${job.fileObject &&
+                              html`
+                                <button
+                                  onClick=${() => retryJob(job.id)}
+                                  className="px-2.5 py-1 w-fit border border-red-900/60 bg-red-950/40 hover:bg-red-950/80 transition rounded text-[10px] font-semibold text-red-100"
+                                >
+                                  Повторить попытку
+                                </button>
+                              `}
+                            </div>
+                          </div>
+                        `}
+
+                        <!-- Success Action Controls -->
+                        ${job.status === "success" &&
+                        job.result &&
+                        html`
+                          <div
+                            className="flex flex-col gap-3 mt-1 animate-in fade-in duration-300"
+                          >
+                            <!-- Action Buttons -->
+                            <div className="flex flex-wrap items-center gap-3">
+                              <!-- PDF Download -->
+                              <a
+                                href=${`/download/${job.result.id}/${job.result.pdfName}`}
+                                download=${`${job.name.replace(/\.[^/.]+$/, "")}.pdf`}
+                                className="inline-flex items-center gap-1.5 py-2 px-4 bg-zinc-50 hover:bg-zinc-200 text-zinc-950 rounded-lg text-xs font-bold transition shadow-sm"
+                              >
+                                <${FileIcon} className="h-3.5 w-3.5" />
+                                Скачать PDF
+                              </a>
+
+                              <!-- PNG Download -->
+                              <a
+                                href=${`/download/${job.result.id}/${job.result.pngName}`}
+                                download=${`${job.name.replace(/\.[^/.]+$/, "")}_chart.png`}
+                                className="inline-flex items-center gap-1.5 py-2 px-3.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold transition"
+                              >
+                                <${ImageIcon} className="h-3.5 w-3.5" />
+                                Скачать график (PNG)
+                              </a>
+
+                              <!-- Toggle Preview -->
+                              <button
+                                onClick=${() => togglePreview(job.id)}
+                                className=${`inline-flex items-center gap-1.5 py-2 px-3.5 rounded-lg text-xs font-semibold transition ml-auto
+                                                            ${
+                                                              job.showPreview
+                                                                ? "bg-zinc-800 text-zinc-100 border border-zinc-700"
+                                                                : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
+                                                            }`}
+                              >
+                                <${EyeIcon} className="h-3.5 w-3.5" />
+                                ${job.showPreview
+                                  ? "Скрыть график"
+                                  : "Показать график"}
+                              </button>
+                            </div>
+
+                            <!-- Chromatogram Inline Preview -->
+                            ${job.showPreview &&
+                            html`
+                              <div
+                                className="border border-zinc-950 bg-zinc-950/50 rounded-lg p-4 flex flex-col gap-2 mt-1 animate-in slide-in-from-top-2 duration-300"
+                              >
+                                <span
+                                  className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider"
+                                >
+                                  Предпросмотр хроматограммы
+                                </span>
+                                <div
+                                  className="w-full bg-zinc-950 border border-zinc-900/60 rounded flex items-center justify-center p-3"
+                                >
+                                  <img
+                                    src=${`/download/${job.result.id}/${job.result.pngName}`}
+                                    alt="Хроматограмма"
+                                    className="max-h-[220px] w-auto max-w-full object-contain rounded shadow-sm border border-zinc-900 select-none"
+                                  />
+                                </div>
+                              </div>
+                            `}
+                          </div>
+                        `}
+                      </div>
+                    `,
+                  )}
+                </div>
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(html`<${App} />`);
+    </script>
+  </body>
+</html>
