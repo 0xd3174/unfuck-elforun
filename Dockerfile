@@ -1,18 +1,20 @@
-# Stage 1: Build the Go binary
-FROM golang:1.22-bookworm AS builder
+# Stage 1: Build the frontend (Vite + React)
+FROM oven/bun:1 as frontend-builder
+WORKDIR /app
+COPY frontend/package.json frontend/bun.lockb* ./
+RUN bun install
+COPY frontend/ ./
+RUN bun run build
 
+# Stage 2: Build the Go binary
+FROM golang:1.22-bookworm AS backend-builder
 WORKDIR /src
-
-# Copy go.mod first to cache dependency resolution
-COPY go.mod ./
-COPY cmd ./cmd
-
+COPY backend/go.mod ./
+COPY backend/cmd ./cmd
 RUN go build -o server ./cmd/server
 
-# Stage 2: Runtime environment with LibreOffice
+# Stage 3: Runtime environment with LibreOffice
 FROM debian:bookworm-slim
-
-# Install system dependencies (only headless LibreOffice and fonts)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-nogui \
     fonts-liberation \
@@ -20,12 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy built server binary and assets
-COPY --from=builder /src/server /app/server
-COPY public /app/public
+# Copy built server binary
+COPY --from=backend-builder /src/server /app/server
+# Copy frontend build to public folder (served by Go)
+COPY --from=frontend-builder /app/dist /app/public
 
-# Expose port
 EXPOSE 8080
-
-# Run the web server
 CMD ["/app/server"]
