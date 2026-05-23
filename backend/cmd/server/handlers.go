@@ -14,10 +14,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Response representing successful processing
+var processingMutex sync.Mutex
+
 type ProcessResponse struct {
 	ID      string `json:"id"`
 	PDFName string `json:"pdfName"`
@@ -104,7 +107,11 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	cmdLibrePDF := exec.CommandContext(ctxPDF, "libreoffice", "--headless", "--convert-to", "pdf", "--outdir", txDir, rtfPath)
 	var pdfErr bytes.Buffer
 	cmdLibrePDF.Stderr = &pdfErr
-	if err := cmdLibrePDF.Run(); err != nil {
+	processingMutex.Lock()
+	err = cmdLibrePDF.Run()
+	processingMutex.Unlock()
+	
+	if err != nil {
 		if ctxPDF.Err() == context.DeadlineExceeded {
 			log.Printf("[%s] Local LibreOffice PDF conversion timed out", uuid)
 			writeJSONError(w, http.StatusGatewayTimeout, "PDF conversion timed out")
@@ -131,7 +138,11 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	cmdLibre := exec.CommandContext(ctxPNG, "libreoffice", "--headless", "--convert-to", "png", "--outdir", txDir, wmfPath)
 	var libreErr bytes.Buffer
 	cmdLibre.Stderr = &libreErr
-	if err := cmdLibre.Run(); err != nil {
+	processingMutex.Lock()
+	err = cmdLibre.Run()
+	processingMutex.Unlock()
+	
+	if err != nil {
 		if ctxPNG.Err() == context.DeadlineExceeded {
 			log.Printf("[%s] LibreOffice WMF to PNG conversion timed out", uuid)
 			writeJSONError(w, http.StatusGatewayTimeout, "PNG conversion timed out")
