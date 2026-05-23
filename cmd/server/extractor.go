@@ -88,6 +88,20 @@ func trimPNG(inputPath, outputPath string) error {
 	}
 	defer f.Close()
 
+	cfg, err := png.DecodeConfig(f)
+	if err != nil {
+		return fmt.Errorf("decode PNG config failed: %w", err)
+	}
+
+	if cfg.Width > 8000 || cfg.Height > 8000 {
+		return fmt.Errorf("image dimensions too large: %dx%d", cfg.Width, cfg.Height)
+	}
+
+	// Seek back to start for decoding
+	if _, err := f.Seek(0, 0); err != nil {
+		return fmt.Errorf("seek failed: %w", err)
+	}
+
 	img, err := png.Decode(f)
 	if err != nil {
 		return fmt.Errorf("decode PNG failed: %w", err)

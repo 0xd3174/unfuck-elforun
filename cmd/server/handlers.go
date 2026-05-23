@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -13,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Response representing successful processing
@@ -97,10 +99,17 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Convert to PDF using local LibreOffice
 	log.Printf("[%s] Converting RTF to PDF via local LibreOffice...", uuid)
-	cmdLibrePDF := exec.Command("libreoffice", "--headless", "--convert-to", "pdf", "--outdir", txDir, rtfPath)
+	ctxPDF, cancelPDF := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancelPDF()
+	cmdLibrePDF := exec.CommandContext(ctxPDF, "libreoffice", "--headless", "--convert-to", "pdf", "--outdir", txDir, rtfPath)
 	var pdfErr bytes.Buffer
 	cmdLibrePDF.Stderr = &pdfErr
 	if err := cmdLibrePDF.Run(); err != nil {
+		if ctxPDF.Err() == context.DeadlineExceeded {
+			log.Printf("[%s] Local LibreOffice PDF conversion timed out", uuid)
+			writeJSONError(w, http.StatusGatewayTimeout, "PDF conversion timed out")
+			return
+		}
 		log.Printf("[%s] Local LibreOffice PDF conversion failed: %v (stderr: %s)", uuid, err, pdfErr.String())
 		writeJSONError(w, http.StatusInternalServerError, "Failed to convert RTF report to PDF")
 		return
@@ -117,10 +126,17 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// 3. Convert WMF to PNG using LibreOffice
 	log.Printf("[%s] Converting WMF to PNG via LibreOffice...", uuid)
-	cmdLibre := exec.Command("libreoffice", "--headless", "--convert-to", "png", "--outdir", txDir, wmfPath)
+	ctxPNG, cancelPNG := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancelPNG()
+	cmdLibre := exec.CommandContext(ctxPNG, "libreoffice", "--headless", "--convert-to", "png", "--outdir", txDir, wmfPath)
 	var libreErr bytes.Buffer
 	cmdLibre.Stderr = &libreErr
 	if err := cmdLibre.Run(); err != nil {
+		if ctxPNG.Err() == context.DeadlineExceeded {
+			log.Printf("[%s] LibreOffice WMF to PNG conversion timed out", uuid)
+			writeJSONError(w, http.StatusGatewayTimeout, "PNG conversion timed out")
+			return
+		}
 		log.Printf("[%s] LibreOffice conversion failed: %v (stderr: %s)", uuid, err, libreErr.String())
 		writeJSONError(w, http.StatusInternalServerError, "Failed to rasterize chromatogram to PNG")
 		return
