@@ -142,7 +142,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	ctxPNG, cancelPNG := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancelPNG()
 
-	filterParam := fmt.Sprintf("png:impress_png_Export:PixelResolution=%s", dpi)
+	filterParam := fmt.Sprintf("png:impress_png_Export:PixelResolution=%d", dpi)
 	cmdLibre := exec.CommandContext(ctxPNG, "libreoffice", "--headless", "--convert-to", filterParam, "--outdir", txDir, wmfPath)
 
 	var libreErr bytes.Buffer
