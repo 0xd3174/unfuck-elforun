@@ -137,13 +137,12 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("[%s] Converting WMF to PNG via LibreOffice...", uuid)
+	log.Printf("[%s] Converting WMF to PDF via LibreOffice...", uuid)
 
-	ctxPNG, cancelPNG := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancelPNG()
+	ctxPDF, cancelPDF = context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancelPDF()
 
-	filterParam := fmt.Sprintf("png:impress_png_Export:PixelResolution=%d", dpi)
-	cmdLibre := exec.CommandContext(ctxPNG, "libreoffice", "--headless", "--convert-to", filterParam, "--outdir", txDir, wmfPath)
+	cmdLibre := exec.CommandContext(ctxPDF, "libreoffice", "--headless", "--convert-to", "pdf", "--outdir", txDir, wmfPath)
 
 	var libreErr bytes.Buffer
 	cmdLibre.Stderr = &libreErr
@@ -153,17 +152,35 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	processingMutex.Unlock()
 
 	if err != nil {
-		if ctxPNG.Err() == context.DeadlineExceeded {
-			log.Printf("[%s] LibreOffice WMF to PNG conversion timed out", uuid)
-			writeJSONError(w, http.StatusGatewayTimeout, "PNG conversion timed out")
+		if ctxPDF.Err() == context.DeadlineExceeded {
+			log.Printf("[%s] LibreOffice WMF to PDF conversion timed out", uuid)
+			writeJSONError(w, http.StatusGatewayTimeout, "PDF conversion timed out")
 			return
 		}
-		log.Printf("[%s] LibreOffice conversion failed: %v (stderr: %s)", uuid, err, libreErr.String())
-		writeJSONError(w, http.StatusInternalServerError, "Failed to rasterize chromatogram to PNG")
+		log.Printf("[%s] LibreOffice PDF conversion failed: %v (stderr: %s)", uuid, err, libreErr.String())
+		writeJSONError(w, http.StatusInternalServerError, "Failed to vectorize chromatogram to PDF")
+		return
+	}
+	g
+	pdfPath := filepath.Join(txDir, "image.pdf")
+	tempPngPath := filepath.Join(txDir, "image.png")
+	// pdftoppm -singlefile appends .png to the prefix, so we strip the extension
+	tempPngPrefix := filepath.Join(txDir, "image")
+
+	log.Printf("[%s] Rasterizing PDF to high-res PNG...", uuid)
+	ctxPoppler, cancelPoppler := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancelPoppler()
+
+	cmdPoppler := exec.CommandContext(ctxPoppler, "pdftoppm", "-png", "-singlefile", "-r", fmt.Sprintf("%d", dpi), pdfPath, tempPngPrefix)
+	var popplerErr bytes.Buffer
+	cmdPoppler.Stderr = &popplerErr
+
+	if err := cmdPoppler.Run(); err != nil {
+		log.Printf("[%s] pdftoppm failed: %v (stderr: %s)", uuid, err, popplerErr.String())
+		writeJSONError(w, http.StatusInternalServerError, "Failed to rasterize chromatogram to high-res PNG")
 		return
 	}
 
-	tempPngPath := filepath.Join(txDir, "image.png")
 	trimmedPngPath := filepath.Join(txDir, "chromatogram.png")
 
 	log.Printf("[%s] Trimming chromatogram margins...", uuid)
