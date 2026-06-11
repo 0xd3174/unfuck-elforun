@@ -161,7 +161,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, "Failed to vectorize chromatogram to PDF")
 		return
 	}
-	g
+
 	pdfPath := filepath.Join(txDir, "image.pdf")
 	tempPngPath := filepath.Join(txDir, "image.png")
 	// pdftoppm -singlefile appends .png to the prefix, so we strip the extension
