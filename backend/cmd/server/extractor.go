@@ -14,17 +14,20 @@ import (
 // decodes it to binary, and writes it to the outputPath.
 func extractWMF(inputPath, outputPath string) error {
 	content, err := os.ReadFile(inputPath)
+
 	if err != nil {
 		return fmt.Errorf("read file failed: %w", err)
 	}
 
 	pictPos := bytes.Index(content, []byte("\\pict"))
+
 	if pictPos == -1 {
 		return fmt.Errorf("no \\pict block found in RTF")
 	}
 
 	braceCount := 1
 	endPos := -1
+
 	for i := pictPos + 1; i < len(content); i++ {
 		if content[i] == '{' {
 			braceCount++
@@ -46,9 +49,11 @@ func extractWMF(inputPath, outputPath string) error {
 	// Find the last control word
 	re := regexp.MustCompile(`\\[a-zA-Z0-9-]+`)
 	matches := re.FindAllIndex(pictBlock, -1)
+
 	if len(matches) == 0 {
 		return fmt.Errorf("no control words found in pict block")
 	}
+
 	lastMatch := matches[len(matches)-1]
 	hexStart := lastMatch[1] // End index of the last control word
 
@@ -97,7 +102,6 @@ func trimPNG(inputPath, outputPath string) error {
 		return fmt.Errorf("image dimensions too large: %dx%d", cfg.Width, cfg.Height)
 	}
 
-	// Seek back to start for decoding
 	if _, err := f.Seek(0, 0); err != nil {
 		return fmt.Errorf("seek failed: %w", err)
 	}

@@ -10,6 +10,7 @@ import (
 const (
 	maxUploadSize = 10 * 1024 * 1024 // 10 MB
 	uploadDir     = "./uploads"
+	dpi           = 300
 )
 
 func startCleanupTask() {
